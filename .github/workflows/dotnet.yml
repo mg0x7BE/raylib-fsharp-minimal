@@ -24,7 +24,7 @@ jobs:
 
       - name: Build for Windows
         run: |
-          dotnet publish --runtime win-x64 -c Release -o "output/win-x64"
+          dotnet publish Demo.fsproj --runtime win-x64 -c Release -o "output/win-x64"
 
       - name: Zip Windows Build
         run: Compress-Archive -Path output/win-x64/* -DestinationPath output/Demo-win-x64.zip
@@ -49,7 +49,7 @@ jobs:
 
       - name: Build for macOS
         run: |
-          dotnet publish --runtime osx-arm64 -c Release -o "output/osx-arm64"
+          dotnet publish Demo.fsproj --runtime osx-arm64 -c Release -o "output/osx-arm64"
 
       - name: Ad-hoc Code Signing
         run: |
