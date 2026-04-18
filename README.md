@@ -9,6 +9,8 @@
 
 # Raylib F# Minimal
 
+![cube.png](cube.png)
+
 A minimal example of using [Raylib](https://www.raylib.com/) with F# and [Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/) compilation. Renders a rotating cube - just a clean starting point.
 
 The entire app compiles down to an executable under 1 MB plus `raylib.dll` (~2 MB). No .NET runtime required.
