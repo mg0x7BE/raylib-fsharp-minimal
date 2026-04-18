@@ -1,18 +1,93 @@
-name: .NET
+name: .NET Build and Release
+permissions:
+  contents: write
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
   workflow_dispatch:
 
-permissions: {}
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-latest
     steps:
-      - name: Placeholder
-        run: echo "Workflow passed"
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build for Windows
+        run: |
+          dotnet publish --runtime win-x64 -c Release -o "output/win-x64"
+
+      - name: Zip Windows Build
+        run: Compress-Archive -Path output/win-x64/* -DestinationPath output/Demo-win-x64.zip
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: win-x64-artifact
+          path: output/Demo-win-x64.zip
+
+  build-macos:
+    name: Build on macOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build for macOS
+        run: |
+          dotnet publish --runtime osx-arm64 -c Release -o "output/osx-arm64"
+
+      - name: Ad-hoc Code Signing
+        run: |
+          codesign --deep --force --verify --sign - output/osx-arm64/Demo
+
+      - name: Zip macOS Build
+        run: cd output && zip -r Demo-osx-arm64.zip osx-arm64/
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: osx-arm64-artifact
+          path: output/Demo-osx-arm64.zip
+
+  create-release:
+    name: Create GitHub Release and Upload Artifacts
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-macos]
+    steps:
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: win-x64-artifact
+          path: output/
+
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: osx-arm64-artifact
+          path: output/
+
+      - name: Create GitHub Release and Upload Artifacts
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: "latest-${{ github.sha }}"
+          name: "Auto-release"
+          files: |
+            output/Demo-win-x64.zip
+            output/Demo-osx-arm64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
