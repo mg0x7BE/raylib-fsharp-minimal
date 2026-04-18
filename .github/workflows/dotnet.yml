@@ -55,6 +55,9 @@ jobs:
         run: |
           codesign --deep --force --verify --sign - output/osx-arm64/Demo
 
+      - name: Remove debug symbols
+        run: rm -rf output/osx-arm64/Demo.dSYM
+
       - name: Zip macOS Build
         run: cd output && zip -r Demo-osx-arm64.zip osx-arm64/
 
