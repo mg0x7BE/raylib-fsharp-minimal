@@ -51,15 +51,19 @@ jobs:
         run: |
           dotnet publish Demo.fsproj --runtime osx-arm64 -c Release -o "output/osx-arm64"
 
+      - name: Create .app bundle
+        run: |
+          mkdir -p output/Demo.app/Contents/MacOS
+          cp output/osx-arm64/Demo output/Demo.app/Contents/MacOS/
+          cp output/osx-arm64/libraylib.dylib output/Demo.app/Contents/MacOS/
+          cp Info.plist output/Demo.app/Contents/
+
       - name: Ad-hoc Code Signing
         run: |
-          codesign --deep --force --verify --sign - output/osx-arm64/Demo
-
-      - name: Remove debug symbols
-        run: rm -rf output/osx-arm64/Demo.dSYM
+          codesign --deep --force --verify --sign - output/Demo.app
 
       - name: Zip macOS Build
-        run: cd output && zip -r Demo-osx-arm64.zip osx-arm64/
+        run: cd output && zip -r Demo-osx-arm64.zip Demo.app/
 
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v7
